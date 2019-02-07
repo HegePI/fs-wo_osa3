@@ -1,8 +1,17 @@
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
+const morgan = require('morgan')
+
+morgan.token('body', function body(req) {
+    return JSON.stringify(req.body)
+
+})
 
 app.use(bodyParser.json())
+app.use(morgan(':method :url :response-time :body'))
+
+
 
 let persons = [
     {
@@ -67,8 +76,8 @@ const generateID = () => {
 }
 
 app.post('/api/persons', (request, response) => {
+
     const body = request.body
-    console.log(body)
 
     if (body.name === undefined) {
         return response.status(400).json({
@@ -95,6 +104,8 @@ app.post('/api/persons', (request, response) => {
         name: body.name,
         number: body.number
     }
+
+    morgan.compile(JSON.stringify(body))
 
     persons = persons.concat(newPerson)
 
