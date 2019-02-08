@@ -13,6 +13,7 @@ morgan.token('body', function body(req) {
 app.use(bodyParser.json())
 app.use(morgan(':method :url :response-time :body'))
 app.use(cors())
+app.use(express.static('build'))
 
 
 

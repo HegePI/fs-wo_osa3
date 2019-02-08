@@ -1,1 +1,1 @@
-DELETE http://localhost:3001/api/persons/4558
+DELETE https://whispering-gorge-52338.herokuapp.com/api/persons
