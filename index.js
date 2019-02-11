@@ -1,8 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
+const person = require('./models/person')
+
 
 
 morgan.token('body', function body(req) {
@@ -15,46 +18,18 @@ app.use(morgan(':method :url :response-time :body'))
 app.use(cors())
 app.use(express.static('build'))
 
+app.get('/api/persons', (request, response) => {
+    console.log('Haetaan henkilöitä tietokannasta')
+    person.find({}).then(person => {
+        response.json(person.map(person => person.toJSON()))
+    })
 
-
-let persons = [
-    {
-        id: 1,
-        name: "Arto Hellas",
-        number: "045-1236543"
-    },
-    {
-        id: 2,
-        name: "Arto Järvinen",
-        number: "041-21423123"
-    },
-    {
-        id: 3,
-        name: "Lea Kutvonen",
-        number: "0404323234"
-    },
-    {
-        id: 4,
-        name: "Martti Tienari",
-        number: "09-784232"
-    }
-]
-
-app.get('/api/persons', (req, res) => {
-    res.json(persons)
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const person = persons.find(person => person.id === id)
-
-    if (person) {
-        response.json(person)
-    } else {
-        response.status(404).end()
-    }
-
-
+    person.findById(request.params.id).then(person => {
+        response.json(person.toJSON())
+    })
 })
 
 app.get('/info', (reg, res) => {
@@ -80,8 +55,11 @@ const generateID = () => {
 }
 
 app.post('/api/persons', (request, response) => {
+    console.log('Moi backendista')
 
     const body = request.body
+
+    console.log(body)
 
     if (body.name === undefined) {
         return response.status(400).json({
@@ -89,31 +67,37 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    if (body.number === undefined) {
+    if (body.nro === undefined) {
         return response.status(400).json({
             error: `number is missing`
         })
     }
 
-    if (persons.some(person => person.name === body.name)) {
-        return response.status(400).json({
-            error: `name must be unique`
-        })
-    }
+    //if (persons.some(person => person.name === body.name)) {
+    //  return response.status(400).json({
+    //    error: `name must be unique`
+    //})
+    //}
 
 
+    console.log('Hetki ennen luomista')
 
-    const newPerson = {
-        id: generateID(),
+    const newPerson = new person({
+        //id: generateID(),
         name: body.name,
-        number: body.number
-    }
+        nro: body.nro
+    })
+    console.log('Luominen onnistui')
 
     morgan.compile(JSON.stringify(body))
 
-    persons = persons.concat(newPerson)
-
-    response.json(newPerson)
+    newPerson.save().then(savedPerson => {
+        response.json(savedPerson.toJSON())
+    })
+        .catch(error => {
+            console.log(error)
+            response.status(400).send({ error: 'malformatted id' })
+        })
 });
 
 const PORT = process.env.PORT || 3001
